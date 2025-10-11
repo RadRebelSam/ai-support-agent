@@ -189,9 +189,12 @@ Capstone v0.2/
 | `AZURE_OPENAI_KEY` | Azure OpenAI API key | - | ✅ |
 | `AZURE_OPENAI_ENDPOINT` | Azure OpenAI endpoint URL | - | ✅ |
 | `AZURE_OPENAI_DEPLOYMENT` | Model deployment name | `gpt-4` | ❌ |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding model for RAG | `text-embedding-ada-002` | ❌ |
 | `AZURE_OPENAI_API_VERSION` | API version | `2024-02-15-preview` | ❌ |
 | `SPEECH_LANGUAGE` | Speech recognition language | `en-US` | ❌ |
 | `TTS_VOICE_NAME` | Text-to-speech voice | `en-US-JennyNeural` | ❌ |
+
+> **Note**: For deployment to Streamlit Cloud, use the secrets dashboard instead of `.env` file. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for details.
 
 ### RAG System Configuration
 
@@ -268,6 +271,17 @@ print(result)
 - **Response Time**: Adjust chunk size and retrieval parameters for your use case
 
 ## 🚀 Deployment
+
+### Streamlit Cloud (Recommended)
+
+The easiest way to deploy this application is using Streamlit Cloud:
+
+1. **Quick Deploy**: Push your code to GitHub and connect to [share.streamlit.io](https://share.streamlit.io)
+2. **Free Hosting**: Deploy and host your app for free
+3. **Auto-scaling**: Automatic scaling based on usage
+4. **Easy Configuration**: Add secrets via web dashboard
+
+📖 **See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed step-by-step instructions**
 
 ### Local Deployment
 The application runs locally using Streamlit's built-in server. For production deployment:

@@ -4,24 +4,43 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Try to import streamlit for secrets support
+try:
+    import streamlit as st
+    HAS_STREAMLIT = True
+except ImportError:
+    HAS_STREAMLIT = False
+
+def get_config_value(key: str, default=None):
+    """Get configuration value from Streamlit secrets or environment variables"""
+    if HAS_STREAMLIT:
+        try:
+            # Try to get from Streamlit secrets first (for deployment)
+            return st.secrets.get(key, os.getenv(key, default))
+        except (AttributeError, FileNotFoundError):
+            # Fallback to environment variables
+            return os.getenv(key, default)
+    return os.getenv(key, default)
+
 class AzureConfig:
     """Configuration for Azure AI Services"""
 
     # Azure Speech Service
-    SPEECH_KEY = os.getenv("AZURE_SPEECH_KEY")
-    SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION")
+    SPEECH_KEY = get_config_value("AZURE_SPEECH_KEY")
+    SPEECH_REGION = get_config_value("AZURE_SPEECH_REGION")
 
     # Azure OpenAI Service
-    OPENAI_API_KEY = os.getenv("AZURE_OPENAI_KEY")
-    OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-    OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4")
-    OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+    OPENAI_API_KEY = get_config_value("AZURE_OPENAI_KEY")
+    OPENAI_ENDPOINT = get_config_value("AZURE_OPENAI_ENDPOINT")
+    OPENAI_DEPLOYMENT = get_config_value("AZURE_OPENAI_DEPLOYMENT", "gpt-4")
+    OPENAI_API_VERSION = get_config_value("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+    OPENAI_EMBEDDING_DEPLOYMENT = get_config_value("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002")
 
     # Speech Recognition Settings
-    SPEECH_RECOGNITION_LANGUAGE = os.getenv("SPEECH_LANGUAGE", "en-US")
+    SPEECH_RECOGNITION_LANGUAGE = get_config_value("SPEECH_LANGUAGE", "en-US")
 
     # Text-to-Speech Settings
-    VOICE_NAME = os.getenv("TTS_VOICE_NAME", "en-US-JennyNeural")
+    VOICE_NAME = get_config_value("TTS_VOICE_NAME", "en-US-JennyNeural")
 
     @classmethod
     def validate(cls):

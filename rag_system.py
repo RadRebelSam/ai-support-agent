@@ -20,12 +20,20 @@ class RAGSystem:
     
     def __init__(self, persist_directory: str = "./chroma_db"):
         self.persist_directory = persist_directory
-        self.embeddings = OpenAIEmbeddings(
-            openai_api_key=AzureConfig.OPENAI_API_KEY,
-            openai_api_base=AzureConfig.OPENAI_ENDPOINT,
-            openai_api_version=AzureConfig.OPENAI_API_VERSION,
-            deployment=AzureConfig.OPENAI_DEPLOYMENT
-        )
+        # Note: Azure OpenAI embeddings require a separate deployment
+        # You need to create an embedding deployment (e.g., text-embedding-ada-002) in Azure
+        try:
+            from langchain_openai import AzureOpenAIEmbeddings
+            self.embeddings = AzureOpenAIEmbeddings(
+                azure_deployment=AzureConfig.OPENAI_EMBEDDING_DEPLOYMENT,
+                openai_api_version=AzureConfig.OPENAI_API_VERSION,
+                azure_endpoint=AzureConfig.OPENAI_ENDPOINT,
+                api_key=AzureConfig.OPENAI_API_KEY
+            )
+        except ImportError:
+            # Fallback if AzureOpenAIEmbeddings not available
+            st.error("Please install langchain-openai for Azure embeddings")
+            raise
         self.vectorstore = None
         self.qa_chain = None
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -112,8 +120,8 @@ class RAGSystem:
         try:
             # Initialize Azure OpenAI LLM
             llm = AzureChatOpenAI(
-                openai_api_key=AzureConfig.OPENAI_API_KEY,
-                openai_api_base=AzureConfig.OPENAI_ENDPOINT,
+                api_key=AzureConfig.OPENAI_API_KEY,
+                azure_endpoint=AzureConfig.OPENAI_ENDPOINT,
                 openai_api_version=AzureConfig.OPENAI_API_VERSION,
                 deployment_name=AzureConfig.OPENAI_DEPLOYMENT,
                 temperature=0.7

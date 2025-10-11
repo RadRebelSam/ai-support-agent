@@ -21,9 +21,10 @@ langchain>=0.1.0
 langchain-community>=0.0.20
 langchain-openai>=0.0.5
 chromadb>=0.4.22
-pypdf2>=3.0.1
+PyPDF2>=3.0.1
 python-docx>=1.1.0
 tiktoken>=0.5.2
+docx2txt>=0.8
 
 # Additional dependencies for deployment
 gunicorn>=21.2.0
