@@ -130,11 +130,20 @@ Click "Deploy" and wait for the app to start!
 - Ensure you have created an embedding deployment in Azure OpenAI
 - The embedding deployment must be named `text-embedding-ada-002` or update the config
 
+### "Microphone recording not available" or "SPXERR_AUDIO_SYS_LIBRARY_NOT_FOUND"
+
+- **This is expected on Streamlit Cloud!** Cloud servers don't have physical microphones
+- **Solution**: The app automatically detects cloud deployment and disables microphone input
+- **Alternatives**: 
+  - Use text input (fully functional on cloud)
+  - Run the app locally for microphone support
+  - Text-to-speech output still works on cloud (responses have audio)
+
 ### "Speech recognition failed"
 
 - Verify your Azure Speech Service key and region are correct
 - Check that your Speech Service resource is active in Azure Portal
-- Note: Voice input works best in local development, may have limitations in cloud
+- Note: Voice **input** only works locally, but voice **output** (TTS) works everywhere
 
 ### Deployment Failed on Streamlit Cloud
 

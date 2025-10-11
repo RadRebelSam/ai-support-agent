@@ -193,15 +193,31 @@ with col1:
 
 with col2:
     st.subheader("Voice Input")
+    
+    # Check if running on cloud
+    from config import is_cloud_deployment
+    is_cloud = is_cloud_deployment()
 
     # Voice input method selection
-    voice_method = st.radio(
-        "Select input method:",
-        ["Text Only", "Microphone (Click to Record)"],
-        key="voice_method"
-    )
+    if is_cloud:
+        st.warning("⚠️ **Microphone recording is not available on Streamlit Cloud**")
+        st.info("""
+        **Why?** Cloud servers don't have physical microphones or audio hardware.
+        
+        **Alternatives:**
+        - Use text input (type your messages)
+        - Run the app locally for microphone support
+        - Upload audio files (coming soon)
+        """)
+        voice_method = "Text Only"
+    else:
+        voice_method = st.radio(
+            "Select input method:",
+            ["Text Only", "Microphone (Click to Record)"],
+            key="voice_method"
+        )
 
-    if voice_method == "Microphone (Click to Record)":
+    if voice_method == "Microphone (Click to Record)" and not is_cloud:
         st.info("🎤 Click **Start Recording** to begin. Click **Stop Recording** when done, or wait for auto-stop after 10 seconds.")
         
         # Create two columns for Start and Stop buttons

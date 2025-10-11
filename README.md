@@ -142,10 +142,17 @@ The application supports various Azure Neural Voices. Popular options include:
 
 ### Voice Input
 
+> **Note:** Voice input (microphone) only works when running locally. Streamlit Cloud servers don't have physical microphones. Text-to-speech output works everywhere!
+
+**Local Development Only:**
 1. **Select Voice Method**: Choose "Microphone (Click to Record)" in the sidebar
 2. **Start Recording**: Click the microphone button
 3. **Speak**: Speak your message clearly
 4. **Stop Recording**: Click the button again to process
+
+**On Streamlit Cloud:**
+- Use text input to chat with the agent
+- Voice output (text-to-speech) works perfectly!
 
 ### Knowledge Base (RAG)
 
