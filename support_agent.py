@@ -36,15 +36,28 @@ class SupportAgent:
         self.system_prompt = """You are a helpful AI call agent. You assist customers with their inquiries in a professional and friendly manner.
 Keep your responses concise and clear, suitable for spoken conversation."""
 
-    def recognize_speech_from_mic(self) -> str:
-        """Recognize speech from microphone input"""
+    def recognize_speech_from_mic(self, timeout_seconds: int = 5) -> str:
+        """Recognize speech from microphone input with timeout
+        
+        Args:
+            timeout_seconds: Maximum seconds to wait for speech input (default: 5)
+        
+        Returns:
+            Recognized text or empty string if no speech detected
+        """
         audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
         recognizer = speechsdk.SpeechRecognizer(
             speech_config=self.speech_config,
             audio_config=audio_config
         )
+        
+        # Set timeout properties
+        self.speech_config.set_property(
+            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs, 
+            str(timeout_seconds * 1000)
+        )
 
-        print("Listening...")
+        print(f"Listening... (will auto-stop after {timeout_seconds} seconds of silence)")
         result = recognizer.recognize_once_async().get()
 
         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
@@ -53,7 +66,10 @@ Keep your responses concise and clear, suitable for spoken conversation."""
             return ""
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation = result.cancellation_details
-            raise Exception(f"Speech recognition canceled: {cancellation.reason}")
+            # Don't raise exception for timeout, just return empty string
+            if cancellation.reason == speechsdk.CancellationReason.Error:
+                raise Exception(f"Speech recognition canceled: {cancellation.error_details}")
+            return ""
 
         return ""
 

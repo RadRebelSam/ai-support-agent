@@ -22,6 +22,10 @@ if 'agent' not in st.session_state:
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
+# Voice recording state
+if 'is_recording' not in st.session_state:
+    st.session_state.is_recording = False
+
 # Main UI
 st.title("Support Agent")
 st.markdown("---")
@@ -192,16 +196,38 @@ with col2:
     )
 
     if voice_method == "Microphone (Click to Record)":
-        st.info("Click the button below to start recording. Click again to stop.")
-
-        if st.button("🎤 Start/Stop Recording"):
-            with st.spinner("Recording... Speak now!"):
+        st.info("🎤 Click **Start Recording** to begin. Recording will auto-stop after 5 seconds of no audio.")
+        
+        # Create two columns for Start and Stop buttons
+        btn_col1, btn_col2 = st.columns(2)
+        
+        with btn_col1:
+            start_button = st.button("🎤 Start Recording", type="primary", disabled=st.session_state.is_recording)
+        
+        with btn_col2:
+            stop_button = st.button("⏹️ Stop Recording", disabled=not st.session_state.is_recording)
+        
+        # Show recording status
+        if st.session_state.is_recording:
+            st.warning("🔴 Recording in progress... Speak now!")
+        
+        # Handle Start Recording
+        if start_button and not st.session_state.is_recording:
+            st.session_state.is_recording = True
+            st.rerun()
+        
+        # Handle recording when is_recording is True
+        if st.session_state.is_recording:
+            with st.spinner("🎙️ Listening... (auto-stops after 5 seconds of silence)"):
                 try:
-                    # Record from microphone
-                    recognized_text = st.session_state.agent.recognize_speech_from_mic()
+                    # Record from microphone with 5 second timeout
+                    recognized_text = st.session_state.agent.recognize_speech_from_mic(timeout_seconds=5)
+                    
+                    # Reset recording state
+                    st.session_state.is_recording = False
 
                     if recognized_text:
-                        st.success(f"Recognized: {recognized_text}")
+                        st.success(f"✅ Recognized: {recognized_text}")
 
                         # Process the recognized text
                         timestamp = time.strftime("%H:%M:%S")
@@ -212,7 +238,8 @@ with col2:
                         })
 
                         # Generate response
-                        response = st.session_state.agent.generate_response(recognized_text)
+                        with st.spinner("🤔 Generating response..."):
+                            response = st.session_state.agent.generate_response(recognized_text)
 
                         response_timestamp = time.strftime("%H:%M:%S")
                         st.session_state.messages.append({
@@ -222,14 +249,25 @@ with col2:
                         })
 
                         # Generate speech
-                        audio_data = st.session_state.agent.text_to_speech(response)
+                        with st.spinner("🔊 Generating speech..."):
+                            audio_data = st.session_state.agent.text_to_speech(response)
 
                         st.rerun()
                     else:
-                        st.warning("No speech detected. Please try again.")
+                        st.warning("⚠️ No speech detected or recording timed out. Please try again.")
+                        time.sleep(1)  # Brief pause before allowing retry
+                        st.rerun()
 
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.session_state.is_recording = False
+                    st.error(f"❌ Error: {str(e)}")
+                    st.rerun()
+        
+        # Handle Stop Recording button
+        if stop_button:
+            st.session_state.is_recording = False
+            st.info("⏹️ Recording stopped by user.")
+            st.rerun()
 
     st.markdown("---")
 
