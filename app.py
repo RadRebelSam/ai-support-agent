@@ -26,6 +26,12 @@ if 'messages' not in st.session_state:
 if 'is_recording' not in st.session_state:
     st.session_state.is_recording = False
 
+if 'recognizer' not in st.session_state:
+    st.session_state.recognizer = None
+
+if 'recording_start_time' not in st.session_state:
+    st.session_state.recording_start_time = None
+
 # Main UI
 st.title("Support Agent")
 st.markdown("---")
@@ -196,7 +202,7 @@ with col2:
     )
 
     if voice_method == "Microphone (Click to Record)":
-        st.info("🎤 Click **Start Recording** to begin. Recording will auto-stop after 5 seconds of no audio.")
+        st.info("🎤 Click **Start Recording** to begin. Click **Stop Recording** when done, or wait for auto-stop after 10 seconds.")
         
         # Create two columns for Start and Stop buttons
         btn_col1, btn_col2 = st.columns(2)
@@ -205,29 +211,88 @@ with col2:
             start_button = st.button("🎤 Start Recording", type="primary", disabled=st.session_state.is_recording)
         
         with btn_col2:
-            stop_button = st.button("⏹️ Stop Recording", disabled=not st.session_state.is_recording)
+            stop_button = st.button("⏹️ Stop Recording", type="secondary", disabled=not st.session_state.is_recording)
         
-        # Show recording status
-        if st.session_state.is_recording:
-            st.warning("🔴 Recording in progress... Speak now!")
+        # Show recording status with timer
+        if st.session_state.is_recording and st.session_state.recording_start_time:
+            elapsed = int(time.time() - st.session_state.recording_start_time)
+            st.warning(f"🔴 Recording in progress... ({elapsed}s) - Speak now or click Stop!")
         
         # Handle Start Recording
         if start_button and not st.session_state.is_recording:
-            st.session_state.is_recording = True
-            st.rerun()
+            try:
+                # Start continuous recognition
+                st.session_state.recognizer = st.session_state.agent.start_continuous_recognition()
+                st.session_state.is_recording = True
+                st.session_state.recording_start_time = time.time()
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Error starting recording: {str(e)}")
         
-        # Handle recording when is_recording is True
-        if st.session_state.is_recording:
-            with st.spinner("🎙️ Listening... (auto-stops after 5 seconds of silence)"):
+        # Handle Stop Recording button
+        if stop_button and st.session_state.is_recording:
+            try:
+                # Stop continuous recognition
+                recognized_text = st.session_state.agent.stop_continuous_recognition(st.session_state.recognizer)
+                
+                # Reset recording state
+                st.session_state.is_recording = False
+                st.session_state.recognizer = None
+                st.session_state.recording_start_time = None
+
+                if recognized_text:
+                    st.success(f"✅ Recognized: {recognized_text}")
+
+                    # Process the recognized text
+                    timestamp = time.strftime("%H:%M:%S")
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": recognized_text,
+                        "timestamp": timestamp
+                    })
+
+                    # Generate response
+                    with st.spinner("🤔 Generating response..."):
+                        response = st.session_state.agent.generate_response(recognized_text)
+
+                    response_timestamp = time.strftime("%H:%M:%S")
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response,
+                        "timestamp": response_timestamp
+                    })
+
+                    # Generate speech
+                    with st.spinner("🔊 Generating speech..."):
+                        audio_data = st.session_state.agent.text_to_speech(response)
+
+                    st.rerun()
+                else:
+                    st.warning("⚠️ No speech detected. Please try again.")
+                    st.rerun()
+
+            except Exception as e:
+                st.session_state.is_recording = False
+                st.session_state.recognizer = None
+                st.session_state.recording_start_time = None
+                st.error(f"❌ Error stopping recording: {str(e)}")
+                st.rerun()
+        
+        # Auto-stop after 10 seconds
+        if st.session_state.is_recording and st.session_state.recording_start_time:
+            elapsed = time.time() - st.session_state.recording_start_time
+            if elapsed > 10:
                 try:
-                    # Record from microphone with 5 second timeout
-                    recognized_text = st.session_state.agent.recognize_speech_from_mic(timeout_seconds=5)
+                    # Auto-stop
+                    recognized_text = st.session_state.agent.stop_continuous_recognition(st.session_state.recognizer)
                     
                     # Reset recording state
                     st.session_state.is_recording = False
+                    st.session_state.recognizer = None
+                    st.session_state.recording_start_time = None
 
                     if recognized_text:
-                        st.success(f"✅ Recognized: {recognized_text}")
+                        st.success(f"✅ Auto-stopped. Recognized: {recognized_text}")
 
                         # Process the recognized text
                         timestamp = time.strftime("%H:%M:%S")
@@ -254,20 +319,18 @@ with col2:
 
                         st.rerun()
                     else:
-                        st.warning("⚠️ No speech detected or recording timed out. Please try again.")
-                        time.sleep(1)  # Brief pause before allowing retry
+                        st.warning("⚠️ Auto-stopped after 10s. No speech detected.")
                         st.rerun()
-
                 except Exception as e:
                     st.session_state.is_recording = False
+                    st.session_state.recognizer = None
+                    st.session_state.recording_start_time = None
                     st.error(f"❌ Error: {str(e)}")
                     st.rerun()
-        
-        # Handle Stop Recording button
-        if stop_button:
-            st.session_state.is_recording = False
-            st.info("⏹️ Recording stopped by user.")
-            st.rerun()
+            else:
+                # Keep updating to show timer
+                time.sleep(0.5)
+                st.rerun()
 
     st.markdown("---")
 

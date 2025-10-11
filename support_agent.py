@@ -2,6 +2,7 @@ import azure.cognitiveservices.speech as speechsdk
 from openai import AzureOpenAI
 from config import AzureConfig
 import time
+import threading
 from typing import List, Dict, Any
 from simple_rag import SimpleRAGSystem
 
@@ -35,9 +36,65 @@ class SupportAgent:
         self.conversation_history: List[Dict[str, str]] = []
         self.system_prompt = """You are a helpful AI call agent. You assist customers with their inquiries in a professional and friendly manner.
 Keep your responses concise and clear, suitable for spoken conversation."""
+        
+        # Speech recognition state
+        self.recognized_text = ""
+        self.is_recognizing = False
+        self.recognition_done = threading.Event()
 
+    def start_continuous_recognition(self) -> speechsdk.SpeechRecognizer:
+        """Start continuous speech recognition and return the recognizer"""
+        self.recognized_text = ""
+        self.is_recognizing = True
+        self.recognition_done.clear()
+        
+        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+        recognizer = speechsdk.SpeechRecognizer(
+            speech_config=self.speech_config,
+            audio_config=audio_config
+        )
+        
+        def recognized_cb(evt):
+            """Callback when speech is recognized"""
+            if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
+                self.recognized_text += evt.result.text + " "
+                print(f"Recognized: {evt.result.text}")
+        
+        def canceled_cb(evt):
+            """Callback when recognition is canceled"""
+            print(f"Recognition canceled: {evt}")
+            self.is_recognizing = False
+            self.recognition_done.set()
+        
+        def stopped_cb(evt):
+            """Callback when recognition is stopped"""
+            print(f"Recognition stopped: {evt}")
+            self.is_recognizing = False
+            self.recognition_done.set()
+        
+        # Connect callbacks
+        recognizer.recognized.connect(recognized_cb)
+        recognizer.canceled.connect(canceled_cb)
+        recognizer.session_stopped.connect(stopped_cb)
+        
+        # Start continuous recognition
+        recognizer.start_continuous_recognition()
+        print("Continuous recognition started. Speak now...")
+        
+        return recognizer
+    
+    def stop_continuous_recognition(self, recognizer: speechsdk.SpeechRecognizer) -> str:
+        """Stop continuous recognition and return recognized text"""
+        if recognizer and self.is_recognizing:
+            recognizer.stop_continuous_recognition()
+            self.recognition_done.wait(timeout=2)  # Wait up to 2 seconds for cleanup
+        
+        result = self.recognized_text.strip()
+        self.recognized_text = ""
+        return result
+    
     def recognize_speech_from_mic(self, timeout_seconds: int = 5) -> str:
-        """Recognize speech from microphone input with timeout
+        """Recognize speech from microphone input with timeout (legacy method)
         
         Args:
             timeout_seconds: Maximum seconds to wait for speech input (default: 5)
@@ -49,12 +106,6 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         recognizer = speechsdk.SpeechRecognizer(
             speech_config=self.speech_config,
             audio_config=audio_config
-        )
-        
-        # Set timeout properties
-        self.speech_config.set_property(
-            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs, 
-            str(timeout_seconds * 1000)
         )
 
         print(f"Listening... (will auto-stop after {timeout_seconds} seconds of silence)")
