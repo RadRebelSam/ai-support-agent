@@ -218,6 +218,9 @@ with col1:
                     st.caption(response_timestamp)
                     # Audio will be displayed by the conversation history loop with auto-play
 
+                # Rerun to trigger conversation history loop and show audio
+                st.rerun()
+
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
