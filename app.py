@@ -281,6 +281,10 @@ with col2:
                     # Generate speech
                     with st.spinner("🔊 Generating speech..."):
                         audio_data = st.session_state.agent.text_to_speech(response)
+                    
+                    # Display the audio player
+                    if audio_data:
+                        st.audio(audio_data, format="audio/wav")
 
                     st.rerun()
                 else:
@@ -332,6 +336,10 @@ with col2:
                         # Generate speech
                         with st.spinner("🔊 Generating speech..."):
                             audio_data = st.session_state.agent.text_to_speech(response)
+                        
+                        # Display the audio player
+                        if audio_data:
+                            st.audio(audio_data, format="audio/wav")
 
                         st.rerun()
                     else:
