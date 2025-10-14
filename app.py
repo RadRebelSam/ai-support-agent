@@ -216,8 +216,7 @@ with col1:
                 with st.chat_message("assistant"):
                     st.write(response)
                     st.caption(response_timestamp)
-                    if audio_data:
-                        st.audio(audio_data, format="audio/wav")
+                    # Audio will be displayed by the conversation history loop with auto-play
 
             except Exception as e:
                 st.error(f"Error: {str(e)}")
