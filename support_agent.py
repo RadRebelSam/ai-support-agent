@@ -39,14 +39,25 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         
         # Speech recognition state
         self.recognized_text = ""
+        self.partial_text = ""  # For real-time partial results
         self.is_recognizing = False
         self.recognition_done = threading.Event()
 
     def start_continuous_recognition(self) -> speechsdk.SpeechRecognizer:
-        """Start continuous speech recognition and return the recognizer"""
+        """Start continuous speech recognition with real-time transcription"""
         self.recognized_text = ""
         self.is_recognizing = True
         self.recognition_done.clear()
+        
+        # Configure for faster, more responsive recognition
+        self.speech_config.set_property(
+            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs, 
+            "500"  # 0.5 seconds of silence before finalizing
+        )
+        self.speech_config.set_property(
+            speechsdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs,
+            "5000"  # 5 seconds max initial silence
+        )
         
         audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
         recognizer = speechsdk.SpeechRecognizer(
@@ -55,10 +66,18 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         )
         
         def recognized_cb(evt):
-            """Callback when speech is recognized"""
+            """Callback when speech is recognized (final result)"""
             if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
                 self.recognized_text += evt.result.text + " "
-                print(f"Recognized: {evt.result.text}")
+                print(f"Final recognized: {evt.result.text}")
+        
+        def recognizing_cb(evt):
+            """Callback for partial recognition results (real-time)"""
+            if evt.result.reason == speechsdk.ResultReason.RecognizingSpeech:
+                # This gives us real-time partial results
+                print(f"Recognizing: {evt.result.text}")
+                # Store partial result for real-time display
+                self.partial_text = evt.result.text
         
         def canceled_cb(evt):
             """Callback when recognition is canceled"""
@@ -74,12 +93,13 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         
         # Connect callbacks
         recognizer.recognized.connect(recognized_cb)
+        recognizer.recognizing.connect(recognizing_cb)  # Real-time partial results
         recognizer.canceled.connect(canceled_cb)
         recognizer.session_stopped.connect(stopped_cb)
         
         # Start continuous recognition
         recognizer.start_continuous_recognition()
-        print("Continuous recognition started. Speak now...")
+        print("Real-time continuous recognition started. Speak now...")
         
         return recognizer
     
@@ -91,7 +111,22 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         
         result = self.recognized_text.strip()
         self.recognized_text = ""
+        self.partial_text = ""
         return result
+    
+    def get_current_transcription(self) -> str:
+        """Get current transcription (final + partial) for real-time display"""
+        final = self.recognized_text.strip()
+        partial = self.partial_text.strip()
+        
+        if final and partial:
+            return f"{final} {partial}"
+        elif final:
+            return final
+        elif partial:
+            return partial
+        else:
+            return ""
     
     def recognize_speech_from_mic(self, timeout_seconds: int = 5) -> str:
         """Recognize speech from microphone input with timeout (legacy method)

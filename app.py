@@ -229,10 +229,17 @@ with col2:
         with btn_col2:
             stop_button = st.button("⏹️ Stop Recording", type="secondary", disabled=not st.session_state.is_recording)
         
-        # Show recording status with timer
+        # Show recording status with timer and real-time transcription
         if st.session_state.is_recording and st.session_state.recording_start_time:
             elapsed = int(time.time() - st.session_state.recording_start_time)
             st.warning(f"🔴 Recording in progress... ({elapsed}s) - Speak now or click Stop!")
+            
+            # Show real-time transcription
+            current_text = st.session_state.agent.get_current_transcription()
+            if current_text:
+                st.info(f"🎤 **Live transcription:** {current_text}")
+            else:
+                st.info("🎤 **Listening...** (speech will appear here as you talk)")
         
         # Handle Start Recording
         if start_button and not st.session_state.is_recording:
@@ -352,8 +359,8 @@ with col2:
                     st.error(f"❌ Error: {str(e)}")
                     st.rerun()
             else:
-                # Keep updating to show timer
-                time.sleep(0.5)
+                # Keep updating to show timer and real-time transcription
+                time.sleep(0.3)  # Faster updates for real-time feel
                 st.rerun()
 
     st.markdown("---")
