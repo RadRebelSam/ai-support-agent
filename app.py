@@ -172,7 +172,7 @@ with col1:
                     </audio>
                     """, unsafe_allow_html=True)
                 else:
-                    st.audio(msg["audio_data"], format="audio/wav", key=audio_key)
+                    st.audio(msg["audio_data"], format="audio/wav")
 
     # Chat input
     user_input = st.chat_input("Type your message here...")

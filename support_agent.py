@@ -68,15 +68,18 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         def recognized_cb(evt):
             """Callback when speech is recognized (final result)"""
             if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
-                self.recognized_text += evt.result.text + " "
-                print(f"Final recognized: {evt.result.text}")
+                # Only add if it's not already in the recognized text to avoid duplication
+                new_text = evt.result.text.strip()
+                if new_text and new_text not in self.recognized_text:
+                    self.recognized_text += new_text + " "
+                    print(f"Final recognized: {new_text}")
         
         def recognizing_cb(evt):
             """Callback for partial recognition results (real-time)"""
             if evt.result.reason == speechsdk.ResultReason.RecognizingSpeech:
                 # This gives us real-time partial results
                 print(f"Recognizing: {evt.result.text}")
-                # Store partial result for real-time display
+                # Store partial result for real-time display (don't add to final text)
                 self.partial_text = evt.result.text
         
         def canceled_cb(evt):
@@ -119,7 +122,8 @@ Keep your responses concise and clear, suitable for spoken conversation."""
         final = self.recognized_text.strip()
         partial = self.partial_text.strip()
         
-        if final and partial:
+        # Only show partial if it's different from what's already in final
+        if final and partial and not partial.lower() in final.lower():
             return f"{final} {partial}"
         elif final:
             return final
