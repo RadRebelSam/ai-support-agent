@@ -32,6 +32,9 @@ if 'recognizer' not in st.session_state:
 if 'recording_start_time' not in st.session_state:
     st.session_state.recording_start_time = None
 
+if 'user_has_interacted' not in st.session_state:
+    st.session_state.user_has_interacted = False
+
 # Main UI
 st.title("Support Agent")
 st.markdown("---")
@@ -149,12 +152,35 @@ with col1:
                 st.caption(msg["timestamp"])
             # Display audio player for assistant messages with audio
             if msg["role"] == "assistant" and msg.get("audio_data"):
-                st.audio(msg["audio_data"], format="audio/wav")
+                # Create a unique key for each audio player
+                audio_key = f"audio_{hash(msg['content'])}"
+                
+                # For the most recent message, add auto-play functionality
+                if msg == st.session_state.messages[-1]:
+                    # Create a data URL for the audio
+                    import base64
+                    audio_b64 = base64.b64encode(msg["audio_data"]).decode()
+                    audio_data_url = f"data:audio/wav;base64,{audio_b64}"
+                    
+                    st.markdown("🔊 **Auto-playing response...** (Click to replay if needed)")
+                    
+                    # Add auto-play HTML5 audio element
+                    st.markdown(f"""
+                    <audio controls autoplay style="width: 100%; margin: 5px 0;">
+                        <source src="{audio_data_url}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.audio(msg["audio_data"], format="audio/wav", key=audio_key)
 
     # Chat input
     user_input = st.chat_input("Type your message here...")
 
     if user_input:
+        # Mark that user has interacted (helps with auto-play)
+        st.session_state.user_has_interacted = True
+        
         # Add user message
         timestamp = time.strftime("%H:%M:%S")
         st.session_state.messages.append({
@@ -249,6 +275,9 @@ with col2:
         # Handle Start Recording
         if start_button and not st.session_state.is_recording:
             try:
+                # Mark that user has interacted (helps with auto-play)
+                st.session_state.user_has_interacted = True
+                
                 # Start continuous recognition
                 st.session_state.recognizer = st.session_state.agent.start_continuous_recognition()
                 st.session_state.is_recording = True
