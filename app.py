@@ -147,6 +147,9 @@ with col1:
             st.write(msg["content"])
             if msg.get("timestamp"):
                 st.caption(msg["timestamp"])
+            # Display audio player for assistant messages with audio
+            if msg["role"] == "assistant" and msg.get("audio_data"):
+                st.audio(msg["audio_data"], format="audio/wav")
 
     # Chat input
     user_input = st.chat_input("Type your message here...")
@@ -170,23 +173,25 @@ with col1:
             try:
                 response = st.session_state.agent.generate_response(user_input)
 
-                # Add assistant message
+                # Text-to-speech
+                with st.spinner("Generating speech..."):
+                    audio_data = st.session_state.agent.text_to_speech(response)
+
+                # Add assistant message with audio data
                 response_timestamp = time.strftime("%H:%M:%S")
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": response,
-                    "timestamp": response_timestamp
+                    "timestamp": response_timestamp,
+                    "audio_data": audio_data
                 })
 
                 # Display assistant message
                 with st.chat_message("assistant"):
                     st.write(response)
                     st.caption(response_timestamp)
-
-                # Text-to-speech
-                with st.spinner("Generating speech..."):
-                    audio_data = st.session_state.agent.text_to_speech(response)
-                    st.audio(audio_data, format="audio/wav")
+                    if audio_data:
+                        st.audio(audio_data, format="audio/wav")
 
             except Exception as e:
                 st.error(f"Error: {str(e)}")
@@ -278,20 +283,17 @@ with col2:
                     with st.spinner("🤔 Generating response..."):
                         response = st.session_state.agent.generate_response(recognized_text)
 
+                    # Generate speech
+                    with st.spinner("🔊 Generating speech..."):
+                        audio_data = st.session_state.agent.text_to_speech(response)
+
                     response_timestamp = time.strftime("%H:%M:%S")
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": response,
-                        "timestamp": response_timestamp
+                        "timestamp": response_timestamp,
+                        "audio_data": audio_data  # Store audio data with the message
                     })
-
-                    # Generate speech
-                    with st.spinner("🔊 Generating speech..."):
-                        audio_data = st.session_state.agent.text_to_speech(response)
-                    
-                    # Display the audio player
-                    if audio_data:
-                        st.audio(audio_data, format="audio/wav")
 
                     st.rerun()
                 else:
@@ -333,20 +335,17 @@ with col2:
                         with st.spinner("🤔 Generating response..."):
                             response = st.session_state.agent.generate_response(recognized_text)
 
+                        # Generate speech
+                        with st.spinner("🔊 Generating speech..."):
+                            audio_data = st.session_state.agent.text_to_speech(response)
+
                         response_timestamp = time.strftime("%H:%M:%S")
                         st.session_state.messages.append({
                             "role": "assistant",
                             "content": response,
-                            "timestamp": response_timestamp
+                            "timestamp": response_timestamp,
+                            "audio_data": audio_data  # Store audio data with the message
                         })
-
-                        # Generate speech
-                        with st.spinner("🔊 Generating speech..."):
-                            audio_data = st.session_state.agent.text_to_speech(response)
-                        
-                        # Display the audio player
-                        if audio_data:
-                            st.audio(audio_data, format="audio/wav")
 
                         st.rerun()
                     else:
