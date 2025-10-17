@@ -64,8 +64,7 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 
 1. **Clone or download the project**
    ```bash
-   git clone <repository-url>
-   cd capstone-v0.2
+   git clone https://github.com/RadRebelSam/ai-support-agent
    ```
 
 2. **Install dependencies**
