@@ -398,20 +398,14 @@ SOFTWARE.
 
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
-## 📞 Support
-
-For technical support:
-
-- **Azure Services**: [Azure Support](https://azure.microsoft.com/support/)
-- **Streamlit**: [Streamlit Documentation](https://docs.streamlit.io/)
-- **OpenAI**: [OpenAI Documentation](https://platform.openai.com/docs)
-
 ## 🙏 Acknowledgments
 
-- **Azure AI Services** for speech and language capabilities
-- **Streamlit** for the excellent web framework
-- **LangChain** for RAG system components
-- **Simple Text Matching** for document retrieval (currently used)
+- **Azure Services for speech and language capabilities**: [Azure Documentation](https://learn.microsoft.com/en-us/azure/)
+- **Streamlit for the excellent web framework**: [Streamlit Documentation](https://docs.streamlit.io/)
+- **LangChain for RAG system components and document processing**: [LangChain Documentation](https://python.langchain.com/docs/)
+- **BeautifulSoup for HTML parsing and web content extraction**: [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+- **Selenium for JavaScript rendering and dynamic content scraping**: [Selenium Documentation](https://selenium-python.readthedocs.io/)
+
 
 ---
 
@@ -419,4 +413,4 @@ For technical support:
 **by Dexin Yang**
 **for Conclase Academy x SBSC NextGen Scholarship Capstone**
 
-**Special thanks to Charles Owolabi, my instructor at Conclase Academy, for his excellent guidance and mentorship throughout this project.**
+**Special thanks to Charles Owolabi, my instructor at Conclase Academy**
