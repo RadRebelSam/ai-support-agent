@@ -1,47 +1,55 @@
-import azure.cognitiveservices.speech as speechsdk
-from openai import AzureOpenAI
-from config import AzureConfig
-import time
-import threading
-from typing import List, Dict, Any
-from simple_rag import SimpleRAGSystem
+# Import required libraries for Azure AI services and RAG system
+import azure.cognitiveservices.speech as speechsdk  # Azure Speech Services for voice recognition and synthesis
+from openai import AzureOpenAI  # Azure OpenAI client for GPT-4 integration
+from config import AzureConfig  # Configuration management for Azure services
+import time  # For timing operations and delays
+import threading  # For handling concurrent operations
+from typing import List, Dict, Any  # Type hints for better code documentation
+from simple_rag import SimpleRAGSystem  # Custom RAG system for document-based responses
 
 class SupportAgent:
-    """AI Support Agent using Azure Speech and OpenAI services"""
+    """AI Support Agent using Azure Speech and OpenAI services
+    
+    This class integrates Azure Speech Services for voice input/output and Azure OpenAI
+    for conversational AI, with an optional RAG system for document-based knowledge retrieval.
+    """
 
     def __init__(self):
-        # Validate configuration
+        # Validate that all required Azure configuration is present
         AzureConfig.validate()
 
-        # Initialize Azure Speech SDK
+        # Initialize Azure Speech Services configuration
         self.speech_config = speechsdk.SpeechConfig(
-            subscription=AzureConfig.SPEECH_KEY,
-            region=AzureConfig.SPEECH_REGION
+            subscription=AzureConfig.SPEECH_KEY,  # Azure Speech subscription key
+            region=AzureConfig.SPEECH_REGION      # Azure region for speech services
         )
+        # Configure speech recognition language (e.g., "en-US")
         self.speech_config.speech_recognition_language = AzureConfig.SPEECH_RECOGNITION_LANGUAGE
+        # Configure text-to-speech voice (e.g., "en-US-JennyNeural")
         self.speech_config.speech_synthesis_voice_name = AzureConfig.VOICE_NAME
 
-        # Initialize Azure OpenAI client
+        # Initialize Azure OpenAI client for GPT-4 integration
         self.openai_client = AzureOpenAI(
-            api_key=AzureConfig.OPENAI_API_KEY,
-            api_version=AzureConfig.OPENAI_API_VERSION,
-            azure_endpoint=AzureConfig.OPENAI_ENDPOINT
+            api_key=AzureConfig.OPENAI_API_KEY,        # OpenAI API key
+            api_version=AzureConfig.OPENAI_API_VERSION, # API version
+            azure_endpoint=AzureConfig.OPENAI_ENDPOINT  # Azure OpenAI endpoint
         )
 
-        # Initialize RAG system
-        self.rag_system = SimpleRAGSystem()
-        self.use_rag = False  # Flag to enable/disable RAG
+        # Initialize RAG (Retrieval-Augmented Generation) system for document-based responses
+        self.rag_system = SimpleRAGSystem()  # Custom RAG implementation
+        self.use_rag = False  # Flag to enable/disable RAG functionality
 
-        # Conversation history
-        self.conversation_history: List[Dict[str, str]] = []
+        # Conversation management - Store chat history for context
+        self.conversation_history: List[Dict[str, str]] = []  # List of message dictionaries
+        # System prompt that defines the AI's role and behavior
         self.system_prompt = """You are a helpful AI call agent. You assist customers with their inquiries in a professional and friendly manner.
 Keep your responses concise and clear, suitable for spoken conversation."""
         
-        # Speech recognition state
-        self.recognized_text = ""
-        self.partial_text = ""  # For real-time partial results
-        self.is_recognizing = False
-        self.recognition_done = threading.Event()
+        # Speech recognition state variables for real-time voice processing
+        self.recognized_text = ""  # Final recognized text from speech
+        self.partial_text = ""     # Real-time partial recognition results
+        self.is_recognizing = False  # Flag indicating if recognition is active
+        self.recognition_done = threading.Event()  # Threading event for synchronization
 
     def start_continuous_recognition(self) -> speechsdk.SpeechRecognizer:
         """Start continuous speech recognition with real-time transcription"""

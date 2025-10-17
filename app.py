@@ -1,87 +1,95 @@
+# Import required libraries for the Streamlit web application
 import streamlit as st
 from support_agent import SupportAgent
 import io
 import time
 from audio_recorder_streamlit import audio_recorder
 
-# Page configuration
+# Configure the Streamlit page settings
 st.set_page_config(
-    page_title="Support Agent",
-    layout="wide"
+    page_title="Support Agent",  # Browser tab title
+    layout="wide"  # Use full width layout for better UI
 )
 
-# Initialize session state
+# Initialize session state variables to maintain state across app reruns
 if 'agent' not in st.session_state:
     try:
+        # Create the main SupportAgent instance with Azure AI services
         st.session_state.agent = SupportAgent()
         st.session_state.initialized = True
     except Exception as e:
+        # Handle initialization errors (e.g., missing API keys)
         st.session_state.initialized = False
         st.session_state.error = str(e)
 
+# Initialize conversation history to store chat messages
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
-# Voice recording state
+# Initialize voice recording state variables
 if 'is_recording' not in st.session_state:
-    st.session_state.is_recording = False
+    st.session_state.is_recording = False  # Track if currently recording audio
 
 if 'recognizer' not in st.session_state:
-    st.session_state.recognizer = None
+    st.session_state.recognizer = None  # Store speech recognizer instance
 
+# Initialize additional session state variables for voice recording
 if 'recording_start_time' not in st.session_state:
-    st.session_state.recording_start_time = None
+    st.session_state.recording_start_time = None  # Track when recording started
 
 if 'user_has_interacted' not in st.session_state:
-    st.session_state.user_has_interacted = False
+    st.session_state.user_has_interacted = False  # Track if user has interacted with the app
 
-# Main UI
-st.title("Support Agent")
-st.markdown("---")
+# Main UI Layout - Create the primary interface
+st.title("Support Agent")  # Main page title
+st.markdown("---")  # Horizontal divider for visual separation
 
-# Sidebar for configuration
+# Sidebar Configuration Panel - Contains all settings and controls
 with st.sidebar:
-    st.header("Configuration")
+    st.header("Configuration")  # Sidebar header
 
-    # RAG System Configuration
+    # RAG (Retrieval-Augmented Generation) System Configuration Section
     st.subheader("🧠 Knowledge Base (RAG)")
     
-    # RAG toggle
+    # RAG System Toggle - Enable/disable document-based responses
     rag_enabled = st.checkbox(
         "Enable RAG System", 
         value=st.session_state.agent.use_rag if st.session_state.initialized else False,
         help="Enable retrieval-augmented generation for better responses"
     )
     
+    # Apply RAG setting to the agent if initialized
     if st.session_state.initialized:
         st.session_state.agent.enable_rag(rag_enabled)
     
-    # File upload and URL input for knowledge base
+    # Document Upload Section - Allow users to add knowledge sources
     st.markdown("**📚 Add Documents to Knowledge Base**")
     
-    # Create two columns for file upload and URL input
+    # Create two equal-width columns for file upload and URL input
     col1, col2 = st.columns([1, 1])
     
+    # Left Column: File Upload Interface
     with col1:
         uploaded_files = st.file_uploader(
             "📄 Upload Files",
-            type=['txt', 'pdf', 'docx'],
-            accept_multiple_files=True,
+            type=['txt', 'pdf', 'docx'],  # Supported file formats
+            accept_multiple_files=True,  # Allow multiple file selection
             help="Upload text files, PDFs, or Word documents"
         )
     
+    # Right Column: URL Input Interface
     with col2:
         url_input = st.text_area(
             "🌐 Add URLs",
             placeholder="https://example.com/article\nhttps://docs.example.com/guide",
-            height=100,
+            height=100,  # Fixed height for text area
             help="Enter URLs (one per line) to scrape content from web pages"
         )
         
-        # JavaScript rendering option
+        # JavaScript Rendering Option - For dynamic websites
         use_js_rendering = st.checkbox(
             "🚀 Use JavaScript Rendering",
-            value=False,
+            value=False,  # Default to disabled (faster)
             help="Enable for JavaScript-heavy sites (slower but more complete content). Note: May not work in cloud environments - will fallback to standard method."
         )
         

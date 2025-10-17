@@ -1,33 +1,43 @@
 #!/usr/bin/env python3
 """
-Simple RAG system without embeddings - uses direct text matching
+Simple RAG (Retrieval-Augmented Generation) system without embeddings
+Uses direct text matching instead of vector embeddings for document retrieval
 """
 
-import os
-import re
-from typing import List, Dict, Any, Optional
-from pathlib import Path
-import streamlit as st
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-import time
+# Standard library imports
+import os  # File system operations
+import re  # Regular expressions for text processing
+from typing import List, Dict, Any, Optional  # Type hints for better code documentation
+from pathlib import Path  # Cross-platform path handling
+import time  # For timing operations and delays
 
-from config import AzureConfig
-from langchain_openai import AzureChatOpenAI
-from langchain.schema import Document
+# Third-party imports for web scraping and document processing
+import streamlit as st  # Streamlit UI framework
+import requests  # HTTP requests for web scraping
+from bs4 import BeautifulSoup  # HTML parsing and content extraction
+from urllib.parse import urlparse  # URL parsing and validation
 
-# Custom document loaders to avoid Windows compatibility issues
-import PyPDF2
-from docx import Document as DocxDocument
+# Azure and LangChain imports for AI integration
+from config import AzureConfig  # Azure service configuration
+from langchain_openai import AzureChatOpenAI  # Azure OpenAI integration
+from langchain.schema import Document  # Document schema for LangChain
+
+# Document processing libraries (avoiding Windows compatibility issues)
+import PyPDF2  # PDF file processing
+from docx import Document as DocxDocument  # Word document processing
 
 class SimpleRAGSystem:
-    """Simple RAG system using text matching instead of embeddings"""
+    """Simple RAG system using text matching instead of embeddings
+    
+    This implementation provides a lightweight alternative to vector-based RAG systems
+    by using direct text matching and keyword overlap scoring for document retrieval.
+    """
     
     def __init__(self):
-        self.documents = []
-        self.llm = None
-        self.qa_chain = None
+        # Core data storage
+        self.documents = []  # List of processed document chunks
+        self.llm = None      # Language model instance (not used in simple mode)
+        self.qa_chain = None # Question-answering chain (not used in simple mode)
         
     def load_text_file(self, file_path: str) -> List[Document]:
         """Load text file"""

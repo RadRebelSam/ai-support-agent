@@ -1,30 +1,40 @@
-import os
-import platform
-from dotenv import load_dotenv
+# Configuration management for Azure AI services
+import os  # Environment variable access
+import platform  # Platform detection for OS-specific configurations
+from dotenv import load_dotenv  # Load environment variables from .env file
 
-# Load environment variables
+# Load environment variables from .env file (for local development)
 load_dotenv()
 
-# Try to import streamlit for secrets support
+# Try to import streamlit for secrets support (for cloud deployment)
 try:
-    import streamlit as st
-    HAS_STREAMLIT = True
+    import streamlit as st  # Streamlit framework for web app
+    HAS_STREAMLIT = True  # Flag indicating Streamlit is available
 except ImportError:
-    HAS_STREAMLIT = False
+    HAS_STREAMLIT = False  # Streamlit not available (command-line usage)
 
 def get_config_value(key: str, default=None):
-    """Get configuration value from Streamlit secrets or environment variables"""
+    """Get configuration value from Streamlit secrets or environment variables
+    
+    This function provides a unified way to access configuration values,
+    trying Streamlit secrets first (for cloud deployment) and falling back
+    to environment variables (for local development).
+    """
     if HAS_STREAMLIT:
         try:
-            # Try to get from Streamlit secrets first (for deployment)
+            # Try to get from Streamlit secrets first (for cloud deployment)
             return st.secrets.get(key, os.getenv(key, default))
         except (AttributeError, FileNotFoundError):
-            # Fallback to environment variables
+            # Fallback to environment variables if secrets are not available
             return os.getenv(key, default)
-    return os.getenv(key, default)
+    return os.getenv(key, default)  # Direct environment variable access
 
 def is_cloud_deployment():
-    """Detect if running on Streamlit Cloud or other cloud platforms"""
+    """Detect if running on Streamlit Cloud or other cloud platforms
+    
+    This function checks for environment indicators that suggest
+    the application is running in a cloud environment rather than locally.
+    """
     # Check for Streamlit Cloud environment indicators
     if os.getenv("STREAMLIT_SHARING_MODE"):
         return True
