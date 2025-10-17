@@ -105,7 +105,7 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 
 ### 1. Azure Speech Service
 
-1. Navigate to [Azure Portal](https://portal.azure.com)
+1. Navigate to Azure
 2. Create a new **Speech Service** resource
 3. Choose your region and pricing tier
 4. After deployment, go to **Keys and Endpoint**
@@ -113,7 +113,7 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 
 ### 2. Azure OpenAI Service
 
-1. Navigate to [Azure Portal](https://portal.azure.com)
+1. Navigate to Azure
 2. Create a new **Azure OpenAI** resource
 3. Deploy a GPT-4 model (or GPT-3.5-turbo for cost efficiency)
 4. Go to **Keys and Endpoint** section
@@ -173,7 +173,7 @@ The application supports various Azure Neural Voices. Popular options include:
 
 ```
 ai-support-agent/
-├── app.py                    # Main Streamlit application
+├── app.py                   # Main Streamlit application
 ├── support_agent.py         # Core AI agent with speech capabilities
 ├── config.py                # Azure configuration management
 ├── simple_rag.py            # Simple RAG system (currently used)
@@ -181,7 +181,7 @@ ai-support-agent/
 ├── test_rag.py              # RAG system testing utilities
 ├── requirements.txt         # Python dependencies
 ├── sample_knowledge.txt     # Example knowledge base file
-└── README.md               # This documentation
+└── README.md                # This documentation
 ```
 
 ## 🔧 Configuration Options
@@ -213,36 +213,6 @@ ai-support-agent/
 - **URL Support**: Web scraping with BeautifulSoup for HTML content extraction
 - **Content Sources**: Local files (TXT, PDF, DOCX) and web pages (HTML)
 
-## 🛠️ Development
-
-### Running in Development Mode
-
-```bash
-streamlit run app.py --server.runOnSave true
-```
-
-### Testing Individual Components
-
-```python
-# Test the support agent
-from support_agent import SupportAgent
-
-agent = SupportAgent()
-response = agent.generate_response("Hello!")
-print(response)
-
-# Test RAG system
-from simple_rag import SimpleRAGSystem
-
-rag = SimpleRAGSystem()
-# Load from files and URLs
-documents = rag.load_documents(["sample_knowledge.txt", "https://example.com/article"])
-processed = rag.process_documents(documents)
-rag.create_knowledge_base(processed)
-result = rag.query("What is this about?")
-print(result)
-```
-
 ### Code Structure
 
 - **`app.py`**: Streamlit UI and user interaction logic
@@ -250,78 +220,6 @@ print(result)
 - **`simple_rag.py`**: Lightweight RAG system using text matching with URL support
 - **`rag_system.py`**: Advanced RAG system with vector embeddings
 - **`config.py`**: Centralized configuration management
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Speech Recognition Problems
-- **Issue**: No speech detected
-- **Solution**: Check microphone permissions and Azure Speech Service configuration
-- **Debug**: Verify `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` are correct
-
-#### OpenAI API Errors
-- **Issue**: "Invalid API key" or "Deployment not found"
-- **Solution**: Verify all Azure OpenAI credentials in `.env` file
-- **Debug**: Check deployment name matches `AZURE_OPENAI_DEPLOYMENT`
-
-#### RAG System Issues
-- **Issue**: "No relevant information found"
-- **Solution**: Ensure documents are properly uploaded and processed
-- **Debug**: Check file formats and content quality
-
-#### URL Scraping Issues
-- **Issue**: "Network error loading URL" or "Error loading URL"
-- **Solution**: Check URL accessibility and internet connection
-- **Debug**: Verify URLs are valid and publicly accessible
-- **Note**: Some websites may block automated requests or require authentication
-
-#### Audio Playback Problems
-- **Issue**: No audio output
-- **Solution**: Check browser audio permissions and try different browser
-- **Debug**: Verify TTS voice name is valid
-
-### Performance Optimization
-
-- **Large Documents**: Split large files into smaller chunks for better processing
-- **Memory Usage**: Clear knowledge base when switching between different document sets
-- **Response Time**: Adjust chunk size and retrieval parameters for your use case
-
-## 🚀 Deployment
-
-### Streamlit Cloud (Recommended)
-
-The easiest way to deploy this application is using Streamlit Cloud:
-
-1. **Quick Deploy**: Push your code to GitHub and connect to [share.streamlit.io](https://share.streamlit.io)
-2. **Free Hosting**: Deploy and host your app for free
-3. **Auto-scaling**: Automatic scaling based on usage
-4. **Easy Configuration**: Add secrets via web dashboard
-
-📖 **See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed step-by-step instructions**
-
-### Local Deployment
-The application runs locally using Streamlit's built-in server. For production deployment:
-
-### Azure App Service
-1. Create an Azure App Service
-2. Configure environment variables
-3. Deploy the application
-4. Set up custom domain (optional)
-
-### Docker Deployment
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-EXPOSE 8501
-
-CMD ["streamlit", "run", "app.py", "--server.address", "0.0.0.0"]
-```
 
 ## 🔮 Future Enhancements
 
@@ -354,13 +252,6 @@ Comprehensive Backend Dashboard
 - Trend Analysis: Identify patterns in user queries and system performance
 - ROI Tracking: Measure support efficiency improvements and cost savings
 - Predictive Analytics: Forecast usage patterns and system requirements
-
-
-### Integration Possibilities
-- **CRM Systems**: Salesforce, HubSpot integration
-- **Help Desk**: Zendesk, Freshdesk integration
-- **Database**: Direct database querying capabilities
-- **APIs**: External API integration for real-time data
 
 ## 📄 License
 
