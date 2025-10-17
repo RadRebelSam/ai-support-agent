@@ -26,5 +26,9 @@ python-docx>=1.1.0
 tiktoken>=0.5.2
 docx2txt>=0.8
 
+# Web scraping dependencies for URL support
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
 # Additional dependencies for deployment
 gunicorn>=21.2.0

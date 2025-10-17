@@ -56,27 +56,59 @@ with st.sidebar:
     if st.session_state.initialized:
         st.session_state.agent.enable_rag(rag_enabled)
     
-    # File upload for knowledge base
-    uploaded_files = st.file_uploader(
-        "Upload documents for knowledge base",
-        type=['txt', 'pdf', 'docx'],
-        accept_multiple_files=True,
-        help="Upload text files, PDFs, or Word documents to build your knowledge base"
-    )
+    # File upload and URL input for knowledge base
+    st.markdown("**📚 Add Documents to Knowledge Base**")
     
-    if uploaded_files and st.button("📚 Build Knowledge Base"):
+    # Create two columns for file upload and URL input
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        uploaded_files = st.file_uploader(
+            "📄 Upload Files",
+            type=['txt', 'pdf', 'docx'],
+            accept_multiple_files=True,
+            help="Upload text files, PDFs, or Word documents"
+        )
+    
+    with col2:
+        url_input = st.text_area(
+            "🌐 Add URLs",
+            placeholder="https://example.com/article\nhttps://docs.example.com/guide",
+            height=100,
+            help="Enter URLs (one per line) to scrape content from web pages"
+        )
+        
+        urls = []
+        if url_input:
+            urls = [url.strip() for url in url_input.split('\n') if url.strip() and url.strip().startswith(('http://', 'https://'))]
+    
+    # Show build button if there are files or URLs
+    has_files = uploaded_files is not None and len(uploaded_files) > 0
+    has_urls = len(urls) > 0
+    
+    if (has_files or has_urls) and st.button("📚 Build Knowledge Base"):
         if st.session_state.initialized:
-            # Save uploaded files temporarily
-            file_paths = []
-            for uploaded_file in uploaded_files:
-                # Create a temporary file
-                with open(f"temp_{uploaded_file.name}", "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                file_paths.append(f"temp_{uploaded_file.name}")
+            # Combine files and URLs
+            all_inputs = []
+            
+            # Handle uploaded files
+            if has_files:
+                file_paths = []
+                for uploaded_file in uploaded_files:
+                    # Create a temporary file
+                    with open(f"temp_{uploaded_file.name}", "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    file_paths.append(f"temp_{uploaded_file.name}")
+                all_inputs.extend(file_paths)
+            
+            # Handle URLs
+            if has_urls:
+                all_inputs.extend(urls)
+                st.info(f"🌐 Processing {len(urls)} URL(s)...")
             
             # Setup knowledge base
             with st.spinner("Building knowledge base..."):
-                success, message = st.session_state.agent.setup_rag_knowledge_base(file_paths)
+                success, message = st.session_state.agent.setup_rag_knowledge_base(all_inputs)
                 if success:
                     st.success(message)
                     st.session_state.agent.enable_rag(True)
@@ -85,9 +117,10 @@ with st.sidebar:
             
             # Clean up temporary files
             import os
-            for file_path in file_paths:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
+            if has_files:
+                for file_path in file_paths:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
     
     # Knowledge base management
     if st.session_state.initialized:

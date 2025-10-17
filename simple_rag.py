@@ -8,6 +8,9 @@ import re
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import streamlit as st
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 from config import AzureConfig
 from langchain_openai import AzureChatOpenAI
@@ -63,29 +66,91 @@ class SimpleRAGSystem:
             st.error(f"Error loading DOCX file {file_path}: {str(e)}")
             return []
     
-    def load_documents(self, file_paths: List[str]) -> List[Document]:
-        """Load documents from various file types"""
+    def load_url(self, url: str) -> List[Document]:
+        """Load content from URL"""
+        try:
+            # Add headers to mimic a real browser
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            
+            # Parse HTML content
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Remove script and style elements
+            for script in soup(["script", "style", "nav", "footer", "header"]):
+                script.decompose()
+            
+            # Extract text content
+            text = soup.get_text()
+            
+            # Clean up whitespace
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            content = ' '.join(chunk for chunk in chunks if chunk)
+            
+            # Get page title
+            title = soup.title.string if soup.title else url
+            
+            return [Document(
+                page_content=content,
+                metadata={
+                    "source": url, 
+                    "type": "url", 
+                    "title": title,
+                    "status_code": response.status_code
+                }
+            )]
+            
+        except requests.exceptions.RequestException as e:
+            st.error(f"Network error loading URL {url}: {str(e)}")
+            return []
+        except Exception as e:
+            st.error(f"Error loading URL {url}: {str(e)}")
+            return []
+    
+    def is_url(self, path: str) -> bool:
+        """Check if input is a URL"""
+        try:
+            result = urlparse(path)
+            return all([result.scheme, result.netloc])
+        except:
+            return False
+    
+    def load_documents(self, inputs: List[str]) -> List[Document]:
+        """Load documents from files or URLs"""
         documents = []
         
-        for file_path in file_paths:
-            file_extension = Path(file_path).suffix.lower()
-            
+        for input_path in inputs:
             try:
-                if file_extension == '.txt':
-                    docs = self.load_text_file(file_path)
-                elif file_extension == '.pdf':
-                    docs = self.load_pdf_file(file_path)
-                elif file_extension in ['.docx', '.doc']:
-                    docs = self.load_docx_file(file_path)
+                if self.is_url(input_path):
+                    # Handle URL
+                    docs = self.load_url(input_path)
+                    if docs:
+                        st.success(f"🌐 Loaded {len(docs)} documents from URL: {input_path}")
                 else:
-                    st.warning(f"Unsupported file type: {file_extension}")
-                    continue
+                    # Handle file (existing logic)
+                    file_extension = Path(input_path).suffix.lower()
+                    if file_extension == '.txt':
+                        docs = self.load_text_file(input_path)
+                    elif file_extension == '.pdf':
+                        docs = self.load_pdf_file(input_path)
+                    elif file_extension in ['.docx', '.doc']:
+                        docs = self.load_docx_file(input_path)
+                    else:
+                        st.warning(f"Unsupported file type: {file_extension}")
+                        continue
                     
+                    if docs:
+                        st.success(f"📄 Loaded {len(docs)} documents from file: {input_path}")
+                
                 documents.extend(docs)
-                st.success(f"Loaded {len(docs)} documents from {file_path}")
                 
             except Exception as e:
-                st.error(f"Error loading {file_path}: {str(e)}")
+                st.error(f"Error loading {input_path}: {str(e)}")
                 
         return documents
     

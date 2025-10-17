@@ -17,9 +17,10 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 - **Contextual Responses**: Adapts responses based on conversation history
 
 ### 📚 **RAG (Retrieval-Augmented Generation) System**
-- **Knowledge Base Integration**: Upload and process documents (TXT, PDF, DOCX)
-- **Intelligent Document Search**: Find relevant information from uploaded documents
-- **Enhanced Responses**: Combine general AI knowledge with specific document content
+- **Knowledge Base Integration**: Upload and process documents (TXT, PDF, DOCX) or scrape content from URLs
+- **Web Content Scraping**: Add web pages to your knowledge base by simply entering URLs
+- **Intelligent Document Search**: Find relevant information from uploaded documents and web content
+- **Enhanced Responses**: Combine general AI knowledge with specific document and web content
 - **Document Management**: Easy upload, processing, and management of knowledge sources
 
 ### 💬 **User Interface**
@@ -156,10 +157,11 @@ The application supports various Azure Neural Voices. Popular options include:
 ### Knowledge Base (RAG)
 
 1. **Upload Documents**: Use the file uploader in the sidebar
-2. **Supported Formats**: TXT, PDF, DOCX files
-3. **Build Knowledge Base**: Click "Build Knowledge Base" after uploading
-4. **Enable RAG**: Toggle the "Enable RAG System" checkbox
-5. **Ask Questions**: The agent will now use your documents to provide more accurate responses
+2. **Add URLs**: Enter web page URLs to scrape content (one per line)
+3. **Supported Formats**: TXT, PDF, DOCX files and web pages (HTML)
+4. **Build Knowledge Base**: Click "Build Knowledge Base" after adding files/URLs
+5. **Enable RAG**: Toggle the "Enable RAG System" checkbox
+6. **Ask Questions**: The agent will now use your documents and web content to provide more accurate responses
 
 ### Configuration
 
@@ -208,6 +210,8 @@ ai-support-agent/
 - **Retrieval Method**: Simple text matching (simple_rag.py) - currently active
 - **Advanced Option**: Vector embeddings (rag_system.py) - available but not used
 - **Max Documents**: 3 relevant documents per query
+- **URL Support**: Web scraping with BeautifulSoup for HTML content extraction
+- **Content Sources**: Local files (TXT, PDF, DOCX) and web pages (HTML)
 
 ## 🛠️ Development
 
@@ -231,7 +235,8 @@ print(response)
 from simple_rag import SimpleRAGSystem
 
 rag = SimpleRAGSystem()
-documents = rag.load_documents(["sample_knowledge.txt"])
+# Load from files and URLs
+documents = rag.load_documents(["sample_knowledge.txt", "https://example.com/article"])
 processed = rag.process_documents(documents)
 rag.create_knowledge_base(processed)
 result = rag.query("What is this about?")
@@ -242,7 +247,7 @@ print(result)
 
 - **`app.py`**: Streamlit UI and user interaction logic
 - **`support_agent.py`**: Core AI agent with speech and conversation management
-- **`simple_rag.py`**: Lightweight RAG system using text matching
+- **`simple_rag.py`**: Lightweight RAG system using text matching with URL support
 - **`rag_system.py`**: Advanced RAG system with vector embeddings
 - **`config.py`**: Centralized configuration management
 
@@ -264,6 +269,12 @@ print(result)
 - **Issue**: "No relevant information found"
 - **Solution**: Ensure documents are properly uploaded and processed
 - **Debug**: Check file formats and content quality
+
+#### URL Scraping Issues
+- **Issue**: "Network error loading URL" or "Error loading URL"
+- **Solution**: Check URL accessibility and internet connection
+- **Debug**: Verify URLs are valid and publicly accessible
+- **Note**: Some websites may block automated requests or require authentication
 
 #### Audio Playback Problems
 - **Issue**: No audio output
