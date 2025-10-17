@@ -132,43 +132,6 @@ The application supports various Azure Neural Voices. Popular options include:
 | Spanish | `es-ES-ElviraNeural` | Female, Spanish |
 | French | `fr-FR-DeniseNeural` | Female, French |
 
-## 📖 Usage Guide
-
-### Basic Chat
-
-1. **Text Input**: Type your message in the chat input field
-2. **Send**: Press Enter or click send
-3. **Voice Response**: The agent will respond with both text and audio
-
-### Voice Input
-
-> **Note:** Voice input (microphone) only works when running locally. Streamlit Cloud servers don't have physical microphones. Text-to-speech output works everywhere!
-
-**Local Development Only:**
-1. **Select Voice Method**: Choose "Microphone (Click to Record)" in the sidebar
-2. **Start Recording**: Click the microphone button
-3. **Speak**: Speak your message clearly
-4. **Stop Recording**: Click the button again to process
-
-**On Streamlit Cloud:**
-- Use text input to chat with the agent
-- Voice output (text-to-speech) works perfectly!
-
-### Knowledge Base (RAG)
-
-1. **Upload Documents**: Use the file uploader in the sidebar
-2. **Add URLs**: Enter web page URLs to scrape content (one per line)
-3. **Supported Formats**: TXT, PDF, DOCX files and web pages (HTML)
-4. **Build Knowledge Base**: Click "Build Knowledge Base" after adding files/URLs
-5. **Enable RAG**: Toggle the "Enable RAG System" checkbox
-6. **Ask Questions**: The agent will now use your documents and web content to provide more accurate responses
-
-### Configuration
-
-- **System Prompt**: Customize the agent's behavior and personality
-- **Reset Conversation**: Clear chat history and start fresh
-- **Export Chat**: Download conversation logs as text files
-
 ## 📁 Project Structure
 
 ```
