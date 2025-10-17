@@ -180,8 +180,6 @@ Capstone v0.2/
 ├── test_rag.py              # RAG system testing utilities
 ├── requirements.txt         # Python dependencies
 ├── sample_knowledge.txt     # Example knowledge base file
-├── chroma_db/              # Vector database storage
-│   └── chroma.sqlite3      # ChromaDB database file
 └── README.md               # This documentation
 ```
 
