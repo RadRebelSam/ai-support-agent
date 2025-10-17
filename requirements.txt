@@ -31,6 +31,9 @@ beautifulsoup4>=4.12.0
 lxml>=4.9.0
 selenium>=4.15.0
 webdriver-manager>=4.0.0
+# Additional dependencies for cloud deployment
+pyvirtualdisplay>=3.0
+xvfb>=1.0.9
 
 # Additional dependencies for deployment
 gunicorn>=21.2.0

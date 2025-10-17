@@ -140,6 +140,10 @@ class SimpleRAGSystem:
             from selenium.webdriver.support import expected_conditions as EC
             from webdriver_manager.chrome import ChromeDriverManager
             from selenium.webdriver.chrome.service import Service
+            import os
+            
+            # Check if running in cloud environment (Streamlit Cloud)
+            is_cloud = os.environ.get('STREAMLIT_SERVER_PORT') is not None
             
             # Setup Chrome options
             chrome_options = Options()
@@ -147,12 +151,36 @@ class SimpleRAGSystem:
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--disable-extensions")
+            chrome_options.add_argument("--disable-logging")
+            chrome_options.add_argument("--disable-web-security")
+            chrome_options.add_argument("--allow-running-insecure-content")
             chrome_options.add_argument("--window-size=1920,1080")
-            chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+            chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
             
-            # Initialize driver
-            service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=chrome_options)
+            # Additional options for cloud deployment
+            if is_cloud:
+                chrome_options.add_argument("--remote-debugging-port=9222")
+                chrome_options.add_argument("--disable-background-timer-throttling")
+                chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+                chrome_options.add_argument("--disable-renderer-backgrounding")
+                chrome_options.add_argument("--disable-features=TranslateUI")
+                chrome_options.add_argument("--disable-ipc-flooding-protection")
+            
+            # Initialize driver with error handling
+            try:
+                if is_cloud:
+                    # For cloud deployment, try to use system Chrome
+                    service = Service()
+                else:
+                    # For local development, use ChromeDriverManager
+                    service = Service(ChromeDriverManager().install())
+                
+                driver = webdriver.Chrome(service=service, options=chrome_options)
+            except Exception as driver_error:
+                st.warning(f"ChromeDriver initialization failed: {str(driver_error)}")
+                st.info("Falling back to standard HTTP request method...")
+                return self._load_url_with_requests(url)
             
             try:
                 # Load the page
@@ -202,10 +230,12 @@ class SimpleRAGSystem:
                 
         except ImportError:
             st.error("Selenium not available. Install with: pip install selenium webdriver-manager")
-            return []
+            st.info("Falling back to standard HTTP request method...")
+            return self._load_url_with_requests(url)
         except Exception as e:
-            st.error(f"Selenium error loading URL {url}: {str(e)}")
-            return []
+            st.warning(f"Selenium error loading URL {url}: {str(e)}")
+            st.info("Falling back to standard HTTP request method...")
+            return self._load_url_with_requests(url)
     
     def is_url(self, path: str) -> bool:
         """Check if input is a URL"""
