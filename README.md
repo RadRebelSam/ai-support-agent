@@ -33,11 +33,11 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Streamlit UI  │    │  Support Agent   │    │  RAG System     │
+│   Streamlit UI  │    │  Support Agent   │    │  Simple RAG     │
 │                 │◄──►│                  │◄──►│                 │
 │ • Chat Interface│    │ • Speech Services│    │ • Document Load │
 │ • Voice Controls│    │ • OpenAI Client  │    │ • Text Matching │
-│ • Configuration │    │ • Conversation   │    │ • Knowledge Base│
+│ • Configuration │    │ • Conversation   │    │ • In-Memory     │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          │                       │                       │
          └───────────────────────┼───────────────────────┘
@@ -64,8 +64,7 @@ A sophisticated voice-enabled AI support agent built with Azure AI Services, Str
 
 1. **Clone or download the project**
    ```bash
-   git clone <repository-url>
-   cd capstone-v0.2
+   git clone https://github.com/RadRebelSam/ai-support-agent
    ```
 
 2. **Install dependencies**
@@ -171,17 +170,15 @@ The application supports various Azure Neural Voices. Popular options include:
 ## 📁 Project Structure
 
 ```
-Capstone v0.2/
+ai-support-agent/
 ├── app.py                    # Main Streamlit application
 ├── support_agent.py         # Core AI agent with speech capabilities
 ├── config.py                # Azure configuration management
-├── simple_rag.py            # RAG system implementation
-├── rag_system.py            # Advanced RAG with embeddings
+├── simple_rag.py            # Simple RAG system (currently used)
+├── rag_system.py            # Advanced RAG with ChromaDB (available but unused)
 ├── test_rag.py              # RAG system testing utilities
 ├── requirements.txt         # Python dependencies
 ├── sample_knowledge.txt     # Example knowledge base file
-├── chroma_db/              # Vector database storage
-│   └── chroma.sqlite3      # ChromaDB database file
 └── README.md               # This documentation
 ```
 
@@ -205,9 +202,11 @@ Capstone v0.2/
 
 ### RAG System Configuration
 
-- **Chunk Size**: 1000 characters (configurable in code)
-- **Chunk Overlap**: 200 characters (configurable in code)
-- **Retrieval Method**: Simple text matching (simple_rag.py) or vector embeddings (rag_system.py)
+- **Current Implementation**: Simple text matching using keyword overlap
+- **Chunk Size**: Variable (paragraph-based splitting)
+- **Storage**: In-memory document storage
+- **Retrieval Method**: Simple text matching (simple_rag.py) - currently active
+- **Advanced Option**: Vector embeddings (rag_system.py) - available but not used
 - **Max Documents**: 3 relevant documents per query
 
 ## 🛠️ Development
@@ -323,7 +322,7 @@ CMD ["streamlit", "run", "app.py", "--server.address", "0.0.0.0"]
 - **User Authentication**: Multi-user support with profiles
 - **API Integration**: REST API for external system integration
 - **Mobile App**: Native mobile application
-- **Advanced RAG**: Semantic search with better document understanding
+- **Advanced RAG**: Switch to ChromaDB-based vector embeddings for semantic search
 
 ### Integration Possibilities
 - **CRM Systems**: Salesforce, HubSpot integration
@@ -387,7 +386,7 @@ For technical support:
 - **Azure AI Services** for speech and language capabilities
 - **Streamlit** for the excellent web framework
 - **LangChain** for RAG system components
-- **ChromaDB** for vector storage capabilities
+- **Simple Text Matching** for document retrieval (currently used)
 
 ---
 
