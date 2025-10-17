@@ -78,12 +78,12 @@ with st.sidebar:
             help="Enter URLs (one per line) to scrape content from web pages"
         )
         
-            # JavaScript rendering option
-            use_js_rendering = st.checkbox(
-                "🚀 Use JavaScript Rendering",
-                value=False,
-                help="Enable for JavaScript-heavy sites (slower but more complete content). Note: May not work in cloud environments - will fallback to standard method."
-            )
+        # JavaScript rendering option
+        use_js_rendering = st.checkbox(
+            "🚀 Use JavaScript Rendering",
+            value=False,
+            help="Enable for JavaScript-heavy sites (slower but more complete content). Note: May not work in cloud environments - will fallback to standard method."
+        )
         
         urls = []
         if url_input:
