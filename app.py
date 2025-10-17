@@ -78,6 +78,13 @@ with st.sidebar:
             help="Enter URLs (one per line) to scrape content from web pages"
         )
         
+        # JavaScript rendering option
+        use_js_rendering = st.checkbox(
+            "🚀 Use JavaScript Rendering",
+            value=False,
+            help="Enable for JavaScript-heavy sites (slower but more complete content)"
+        )
+        
         urls = []
         if url_input:
             urls = [url.strip() for url in url_input.split('\n') if url.strip() and url.strip().startswith(('http://', 'https://'))]
@@ -108,7 +115,7 @@ with st.sidebar:
             
             # Setup knowledge base
             with st.spinner("Building knowledge base..."):
-                success, message = st.session_state.agent.setup_rag_knowledge_base(all_inputs)
+                success, message = st.session_state.agent.setup_rag_knowledge_base(all_inputs, use_js_rendering=use_js_rendering)
                 if success:
                     st.success(message)
                     st.session_state.agent.enable_rag(True)

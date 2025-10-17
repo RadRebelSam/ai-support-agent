@@ -11,6 +11,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import time
 
 from config import AzureConfig
 from langchain_openai import AzureChatOpenAI
@@ -66,50 +67,144 @@ class SimpleRAGSystem:
             st.error(f"Error loading DOCX file {file_path}: {str(e)}")
             return []
     
-    def load_url(self, url: str) -> List[Document]:
-        """Load content from URL"""
+    def load_url(self, url: str, use_selenium: bool = False) -> List[Document]:
+        """Load content from URL with optional JavaScript rendering"""
         try:
-            # Add headers to mimic a real browser
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            
-            # Parse HTML content
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Remove script and style elements
-            for script in soup(["script", "style", "nav", "footer", "header"]):
-                script.decompose()
-            
-            # Extract text content
-            text = soup.get_text()
-            
-            # Clean up whitespace
-            lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            content = ' '.join(chunk for chunk in chunks if chunk)
-            
-            # Get page title
-            title = soup.title.string if soup.title else url
-            
-            return [Document(
-                page_content=content,
-                metadata={
-                    "source": url, 
-                    "type": "url", 
-                    "title": title,
-                    "status_code": response.status_code
-                }
-            )]
-            
-        except requests.exceptions.RequestException as e:
-            st.error(f"Network error loading URL {url}: {str(e)}")
-            return []
+            if use_selenium:
+                return self._load_url_with_selenium(url)
+            else:
+                return self._load_url_with_requests(url)
         except Exception as e:
             st.error(f"Error loading URL {url}: {str(e)}")
+            return []
+    
+    def _load_url_with_requests(self, url: str) -> List[Document]:
+        """Load content from URL using requests (fast, but no JavaScript)"""
+        # Add headers to mimic a real browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        # Parse HTML content
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style", "nav", "footer", "header"]):
+            script.decompose()
+        
+        # Extract text content
+        text = soup.get_text()
+        
+        # Clean up whitespace
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        content = ' '.join(chunk for chunk in chunks if chunk)
+        
+        # Get page title
+        title = soup.title.string if soup.title else url
+        
+        # Check if this looks like a JavaScript app
+        is_js_app = any([
+            "You need to enable JavaScript" in content,
+            "enable JavaScript to run this app" in content,
+            len(content.strip()) < 100,
+            soup.find('div', {'id': 'root'}) is not None,
+            soup.find('div', {'id': 'app'}) is not None
+        ])
+        
+        if is_js_app:
+            st.warning(f"⚠️ {url} appears to be a JavaScript application. Content may be limited. Try enabling 'Use JavaScript Rendering' for better results.")
+        
+        return [Document(
+            page_content=content,
+            metadata={
+                "source": url, 
+                "type": "url", 
+                "title": title,
+                "status_code": response.status_code,
+                "method": "requests",
+                "is_js_app": is_js_app
+            }
+        )]
+    
+    def _load_url_with_selenium(self, url: str) -> List[Document]:
+        """Load content from URL using Selenium (slower, but handles JavaScript)"""
+        try:
+            from selenium import webdriver
+            from selenium.webdriver.chrome.options import Options
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            from webdriver_manager.chrome import ChromeDriverManager
+            from selenium.webdriver.chrome.service import Service
+            
+            # Setup Chrome options
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")  # Run in background
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1920,1080")
+            chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+            
+            # Initialize driver
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            
+            try:
+                # Load the page
+                driver.get(url)
+                
+                # Wait for content to load
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )
+                
+                # Wait a bit more for JavaScript to render
+                time.sleep(3)
+                
+                # Get page title
+                title = driver.title or url
+                
+                # Get page source after JavaScript execution
+                page_source = driver.page_source
+                soup = BeautifulSoup(page_source, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style", "nav", "footer", "header"]):
+                    script.decompose()
+                
+                # Extract text content
+                text = soup.get_text()
+                
+                # Clean up whitespace
+                lines = (line.strip() for line in text.splitlines())
+                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                content = ' '.join(chunk for chunk in chunks if chunk)
+                
+                return [Document(
+                    page_content=content,
+                    metadata={
+                        "source": url, 
+                        "type": "url", 
+                        "title": title,
+                        "status_code": 200,
+                        "method": "selenium",
+                        "is_js_app": True
+                    }
+                )]
+                
+            finally:
+                driver.quit()
+                
+        except ImportError:
+            st.error("Selenium not available. Install with: pip install selenium webdriver-manager")
+            return []
+        except Exception as e:
+            st.error(f"Selenium error loading URL {url}: {str(e)}")
             return []
     
     def is_url(self, path: str) -> bool:
@@ -120,7 +215,7 @@ class SimpleRAGSystem:
         except:
             return False
     
-    def load_documents(self, inputs: List[str]) -> List[Document]:
+    def load_documents(self, inputs: List[str], use_js_rendering: bool = False) -> List[Document]:
         """Load documents from files or URLs"""
         documents = []
         
@@ -128,9 +223,10 @@ class SimpleRAGSystem:
             try:
                 if self.is_url(input_path):
                     # Handle URL
-                    docs = self.load_url(input_path)
+                    docs = self.load_url(input_path, use_selenium=use_js_rendering)
                     if docs:
-                        st.success(f"🌐 Loaded {len(docs)} documents from URL: {input_path}")
+                        method = "JavaScript rendering" if use_js_rendering else "standard"
+                        st.success(f"🌐 Loaded {len(docs)} documents from URL ({method}): {input_path}")
                 else:
                     # Handle file (existing logic)
                     file_extension = Path(input_path).suffix.lower()

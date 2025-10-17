@@ -288,11 +288,11 @@ Use this information to provide a helpful and accurate response. If the informat
         """Enable or disable RAG functionality"""
         self.use_rag = enabled
     
-    def setup_rag_knowledge_base(self, file_paths: List[str], force_recreate: bool = False):
-        """Setup RAG knowledge base from files"""
+    def setup_rag_knowledge_base(self, file_paths: List[str], force_recreate: bool = False, use_js_rendering: bool = False):
+        """Setup RAG knowledge base from files and URLs"""
         try:
             # Load documents
-            documents = self.rag_system.load_documents(file_paths)
+            documents = self.rag_system.load_documents(file_paths, use_js_rendering=use_js_rendering)
             if not documents:
                 return False, "No documents loaded"
             

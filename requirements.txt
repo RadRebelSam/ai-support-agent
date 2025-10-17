@@ -29,6 +29,8 @@ docx2txt>=0.8
 # Web scraping dependencies for URL support
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
+selenium>=4.15.0
+webdriver-manager>=4.0.0
 
 # Additional dependencies for deployment
 gunicorn>=21.2.0
