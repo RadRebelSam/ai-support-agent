@@ -20,7 +20,7 @@ from urllib.parse import urlparse  # URL parsing and validation
 # Azure and LangChain imports for AI integration
 from config import AzureConfig  # Azure service configuration
 from langchain_openai import AzureChatOpenAI  # Azure OpenAI integration
-from langchain.schema import Document  # Document schema for LangChain
+from langchain_core.documents import Document  # Document schema for LangChain
 
 # Document processing libraries (avoiding Windows compatibility issues)
 import PyPDF2  # PDF file processing

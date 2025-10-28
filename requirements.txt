@@ -18,6 +18,7 @@ requests>=2.31.0
 
 # RAG System Dependencies
 langchain>=0.1.0
+langchain-core>=0.1.0
 langchain-community>=0.0.20
 langchain-openai>=0.0.5
 chromadb>=0.4.22
